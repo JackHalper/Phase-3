@@ -1,361 +1,74 @@
-# Phase 3 Code Challenge
+# Phase 3 Project - Star Classification
+By Jack Halper
 
-This assessment is designed to test your understanding of Module 3 material. It covers:
+## Overview 
 
-* Gradient Descent
-* Logistic Regression
-* Classification Metrics
-* Decision Trees
+The University of Washington (“The Client”) has come to us to assist in classifying celestial objects observed by the their newly upcoming sky-survey.
+The University of Washington has hand-classified celestial objects in the past, however, with the new volume of observations coming in with their new extremely powerful ground based telescopes they would like to automate the classification process. If you want to dive deeper into the full analysis click [here!](https://github.com/JackHalper/Phase-3/blob/main/Final_Notebook.ipynb)
 
-_Read the instructions carefully_. You will be asked both to write code and to answer short answer questions.
+## The Data
+The University of Washington has kindly provided us with [100,000 spectrograph classified observations of numerous celestial objects](https://www.kaggle.com/datasets/fedesoriano/stellar-classification-dataset-sdss17). There are no-missing values and the dataset is very clean.
+These data were captured by the [Sloan Digital Sky Survey (SDSS)](https://www.sdss.org/) and represent a small sample of the overall survey which began in 2000. These data were captures with a 2.5 meter ground-based telescope located in Apache, New Mexico. The Data include a variety of spectroscopic observations of electromagnetic radiation celestial objects emit. Redshift, a proxy for distance which measures how much the wavelengths of the radition have lengthened as they traverse the continually expanding universe is a particularly important feature of this sample dataset. The celestial objects are classified in three distinct classes: Stars, Galaxies, and Quasars.
 
-## Code Tests
+![image](https://github.com/JackHalper/Phase-3/assets/137962760/fffc73e3-0a17-4831-b532-72c4f01a8cbe)
 
-We have provided some code tests for you to run to check that your work meets the item specifications. Passing these tests does not necessarily mean that you have gotten the item correct - there are additional hidden tests. However, if any of the tests do not pass, this tells you that your code is incorrect and needs changes to meet the specification. To determine what the issue is, read the comments in the code test cells, the error message you receive, and the item instructions.
+It's evident that the dataset is slightly unbalanced with Galaxies comprising 60% of observations and Quasars and Stars making up the final 40%. It's important to note, however, that this is not reflective of the true nature of the composition of the universe. Galaxies are necessarily less abundant than stars given that they are literally comprised of stars but their significantly higher luminosity (often times billions or trillions times brighter than a single star) allows them to be seen from significantly further distances and therefore they make up a large percentage of observations because we are able to see galaxies that are orders of magnitutude further away then even the brightest stars. Quasars are even less common but make up a disproportionate amount of the sample due to their brightness. Quasars can be thousands of times brighter then our own milky way galaxy and have been observed up to ten's of billions of lightyears away as they appeared in the primordial universe.
 
-## Short Answer Questions 
+## The Metric
+Accuracy is the primary metric we have decided to evaluate the following predictive models. The reason for selecting accuracy as our evaluation metric is that for a survey of this nature, overall accuracy is the key perogative. The Difference between False Positives and False Negatives in this context is negligible and overall accuracy is the key concern. The objective is to obtain as accurate a survey of the universe as is attainable given the observations
 
-For the short answer questions...
+## The Approach 
+We utilize a supervised machine learning algorithm, Logistic Regression, to classify each object based upon select features of the spectrograph.
 
-* _Use your own words_. It is OK to refer to outside resources when crafting your response, but _do not copy text from another source_.
+## The Features
+The Features include spectroscopic observations of slices of the electromagnetic spectra emitted from objects. Each of these "slices" is represented with a numeric value. 
 
-* _Communicate clearly_. We are not grading your writing skills, but you can only receive full credit if your teacher is able to fully understand your response. 
+## The Target
+Our target variable is the "class" variable which indicates if an object is (0) Galaxy, (1) Quasar or (2) Star
 
-* _Be concise_. You should be able to answer most short answer questions in a sentence or two. Writing unnecessarily long answers increases the risk of you being unclear or saying something incorrect.
+#### Investigating Collinearity
+![image](https://github.com/JackHalper/Phase-3/assets/137962760/e593baa7-5918-4e04-9a61-dd4b36652515)
 
+It's obvious several features exhibit severe collinearity. Notably, Z, U, and G; R and I are highly collinear exhibiting correlations approaching 1. Given that we utilizing logistic regression to create this predictive model, we must drop some collinear features due to the fact that logistic regression assumes no severe collinearity. We drop U, Z, and I to eleminate any outstanding collinnearity. Our final feature set is as follows: alpha, delta, R, G, and Redshift 
 
-```python
-# Run this cell without changes to import the necessary libraries
+![image](https://github.com/JackHalper/Phase-3/assets/137962760/d1ad8ee1-f14a-4354-81cd-ac05eb2a6689)
 
-from numbers import Number
-```
+Great! Now that we've dealt with collinearity we can move onto intializing our baseline model: 
 
----
-## Part 1: Gradient Descent [Suggested Time: 20 min]
----
-In this part, you will describe how gradient descent works to calculate a parameter estimate. Below is an image of a best fit line from a linear regression model using TV advertising spending to predict product sales.
+## The Baseline Model (Logistic Regression with no modifications)
 
-![best fit line](https://raw.githubusercontent.com/learn-co-curriculum/dsc-cc-images/main/phase_3/best_fit_line.png)
+Our Baseline Model yields an impressive accuracy score of 95.015% and correctly classifies 76,012 out of 80,000 total objects correctly. The image below represents a confusion matrix evaluating our baseline model performance:  
 
-This best fit line can be described by the equation $y = mx + b$. Below is the RSS cost curve associated with the slope parameter $m$:
+![image](https://github.com/JackHalper/Phase-3/assets/137962760/7041111b-f6a1-402e-af38-a616719f496b)
 
-![cost curve](https://raw.githubusercontent.com/learn-co-curriculum/dsc-cc-images/main/phase_3/cost_curve.png)
+## Hyperparameter Tuning
+We manually tuned two specific hyperparameters using iterative cross-validation: C(Regularization Strength) and Solver. We find that C=100, which is very weak regularization, provides the strongest accuracy performance before pleteauing as regularization strength decreases. We feel confident selecting this weak regularization given the integrity, cleanliness and size of the overall dataset. 
+We further find that the "Newton-CG" yields the best accuracy for our logistic regression predictive classification model
 
-where RSS is the residual sum of squares: $RSS = \sum_{i=1}^n(y_i - (mx_i + b))^2$ 
+## Evaluating the Final Model
+Our Final Model Preforms very well on the training data yielding an accuracy score of 95.83% and correctly classifying 76,663/80,000 objects.
 
-### 1.1) Short Answer: Explain how the RSS curve above could be used to find an optimal value for the slope parameter $m$. 
+![image](https://github.com/JackHalper/Phase-3/assets/137962760/d3adbce1-8a27-4d08-a1b3-a2a3ee7b64dd)
 
-Your answer should provide a one sentence summary, not every step of the process.
+This accuracy performance represents an improvement on the baseline model by a factor of 0.8%
 
 
-```python
-# Your answer here
 
 
-```
 
-Below is a visualization showing the iterations of a gradient descent algorithm applied the RSS curve. Each yellow marker represents an estimate, and the lines between markers represent the steps taken between estimates in each iteration. Numeric labels identify the iteration numbers.
+![image](https://github.com/JackHalper/Phase-3/assets/137962760/d4b36991-d31f-411b-9c0e-43b9258f9551)
 
-![gradient descent](https://raw.githubusercontent.com/learn-co-curriculum/dsc-cc-images/main/phase_3/gd.png)
+Our Final Model performs very well on the unseen test data yielding an accuracy score of 95.665%; correctly classifying 19,133/20,000 objects. This compares to a baseline accuracy on the test data of 94.91%. Our final model, then, improved on the baseline model's accuracy by a factor of 0.75%
 
-### 1.2) Short Answer: Explain why the distances between markers get smaller over successive iterations.
+## Recommendations 
+It's obvious that the model struggles most with distinguishing Quasars and Galaxies. 
+Looking at the distribution of features it is obvious that redshift is the most distinguishing features between these three classes:
 
+![image](https://github.com/JackHalper/Phase-3/assets/137962760/6b6db15f-97fc-49e5-bc2d-c69d9bb171e0)
 
-```python
-# Your answer here
+There is substantial overlap, however, between galaxies and quasars in redshift whereas stars are almost uniformly at 0. Incorporating Radio Spectroscopy to the model to identify emissions unique to Quasars may provide the necessary data to improve the model's accuracy by giving the information it needs to distinguish between these two objects. Researchers should consider including this in future sky-surveys. 
 
+## Next Steps
 
-```
+New unsupervised machine learning techniques could yield better results than this logistic regression model and should be considered as an alternative modeling solution for future attempts.
 
-### 1.3) Short Answer: What would be the effect of decreasing the learning rate for this application of gradient descent?
-
-
-```python
-# Your answer here
-
-
-```
-
----
-## Part 2: Logistic Regression [Suggested Time: 15 min]
----
-In this part, you will answer general questions about logistic regression.
-
-### 2.1) Short Answer: Provide one reason why logistic regression is better than linear regression for modeling a binary target/outcome.
-
-
-```python
-# Your answer here
-
-
-```
-
-### 2.2) Short Answer: Compare logistic regression to another classification model of your choice (e.g. KNN, Decision Tree, etc.). What is one advantage and one disadvantage logistic regression has when compared with the other model?
-
-
-```python
-# Your answer here
-
-
-```
-
----
-## Part 3: Classification Metrics [Suggested Time: 20 min]
----
-In this part, you will make sense of classification metrics produced by various classifiers.
-
-The confusion matrix below represents the predictions generated by a classisification model on a small testing dataset.
-
-![cnf matrix](https://raw.githubusercontent.com/learn-co-curriculum/dsc-cc-images/main/phase_3/cnf_matrix.png)
-
-### 3.1) Create a numeric variable `precision` containing the precision of the classifier.
-
-
-```python
-# CodeGrade step3.1
-# Replace None with appropriate code
-
-precision = None
-```
-
-
-```python
-# This test confirms that you have created a numeric variable named precision
-
-assert isinstance(precision, Number)
-```
-
-### 3.2) Create a numeric variable `f1score` containing the F-1 score of the classifier.
-
-
-```python
-# CodeGrade step3.2
-# Replace None with appropriate code
-
-f1score = None
-```
-
-
-```python
-# This test confirms that you have created a numeric variable named f1score
-
-assert isinstance(f1score, Number)
-```
-
-The ROC curves below were calculated for three different models applied to one dataset.
-
-1. Only Age was used as a feature in the model
-2. Only Estimated Salary was used as a feature in the model
-3. All features were used in the model
-
-![roc](https://raw.githubusercontent.com/learn-co-curriculum/dsc-cc-images/main/phase_3/many_roc.png)
-
-### 3.3) Short Answer: Identify the best ROC curve in the above graph and explain why it is the best. 
-
-
-```python
-# Your answer here
-
-
-```
-
-Run the following cells to load a sample dataset, run a classification model on it, and perform some EDA.
-
-
-```python
-# Run this cell without changes
-
-# Include relevant imports
-import pickle, sklearn
-from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import StandardScaler 
-from sklearn.linear_model import LogisticRegression
-from sklearn.metrics import accuracy_score, roc_curve, roc_auc_score
-
-network_df = pickle.load(open('sample_network_data.pkl', 'rb'))
-
-# partion features and target 
-X = network_df.drop('Purchased', axis=1)
-y = network_df['Purchased']
-
-# train test split
-X_train, X_test, y_train, y_test = train_test_split(X, y, random_state=2019)
-
-# scale features
-scale = StandardScaler()
-scale.fit(X_train)
-X_train = scale.transform(X_train)
-X_test = scale.transform(X_test)
-
-# build classifier
-model = LogisticRegression(C=1e5, solver='lbfgs')
-model.fit(X_train, y_train)
-y_test_pred = model.predict(X_test)
-
-# get the accuracy score
-print(f'The classifier has an accuracy score of {round(accuracy_score(y_test, y_test_pred), 3)}.')
-```
-
-    The classifier has an accuracy score of 0.956.
-
-
-
-```python
-# Run this cell without changes
-
-y.value_counts()
-```
-
-
-
-
-    0    257
-    1     13
-    Name: Purchased, dtype: int64
-
-
-
-### 3.4) Short Answer: Explain how the distribution of `y` shown above could explain the high accuracy score of the classification model.
-
-
-```python
-# Your answer here
-
-
-```
-
-### 3.5) Short Answer: What is one method you could use to improve your model to address the issue discovered in Question 3.4?
-
-
-```python
-# Your answer here
-
-
-```
-
----
-## Part 4: Decision Trees [Suggested Time: 20 min]
----
-In this part, you will use decision trees to fit a classification model to a wine dataset. The data contain the results of a chemical analysis of wines grown in one region in Italy using three different cultivars (grape types). There are thirteen features from the measurements taken, and the wines are classified by cultivar in the `target` variable.
-
-
-```python
-# Run this cell without changes
-
-# Relevant imports 
-import pandas as pd 
-import numpy as np 
-from sklearn.datasets import load_wine
-from sklearn.tree import DecisionTreeClassifier
-
-# Load the data 
-wine = load_wine()
-X, y = load_wine(return_X_y=True)
-X = pd.DataFrame(X, columns=wine.feature_names)
-y = pd.Series(y)
-y.name = 'target'
-```
-
-### 4.1) Use `train_test_split()` to evenly split `X` and `y` data between training sets (`X_train` and `y_train`) and test sets (`X_test` and `y_test`), with `random_state=1`.
-
-Do not alter `X` or `y` before performing the split.
-
-
-```python
-# CodeGrade step4.1
-# Replace None with appropriate code
-
-X_train, X_test, y_train, y_test = None
-```
-
-
-```python
-# These tests confirm that you have created DataFrames named X_train, X_test and Series named y_train, and y_test
-
-assert type(X_train) == pd.DataFrame
-assert type(X_test) == pd.DataFrame
-assert type(y_train) == pd.Series
-assert type(y_test) == pd.Series
-
-# These tests confirm that you have split the data evenly between train and test sets
-
-assert X_train.shape[0] == X_test.shape[0]
-assert y_train.shape[0] == y_test.shape[0]
-```
-
-### 4.2) Create an untuned decision tree classifier `wine_dt` and fit it using `X_train` and `y_train`, with `random_state=1`. 
-
-Use parameter defaults for your classifier. You must use the Scikit-learn DecisionTreeClassifier (docs [here](https://scikit-learn.org/stable/modules/generated/sklearn.tree.DecisionTreeClassifier.html))
-
-
-```python
-# CodeGrade step4.2
-# Replace None with appropriate code
-
-wine_dt = None
-```
-
-
-```python
-# This test confirms that you have created a DecisionTreeClassifier named wine_dt
-
-assert type(wine_dt) == DecisionTreeClassifier
-
-# This test confirms that you have set random_state to 1
-
-assert wine_dt.get_params()['random_state'] == 1
-
-# This test confirms that wine_dt has been fit
-
-sklearn.utils.validation.check_is_fitted(wine_dt)
-```
-
-### 4.3) Create an array `y_pred` generated by using `wine_dt` to make predictions for the test data.
-
-
-```python
-# CodeGrade step4.3
-# Replace None with appropriate code
-
-y_pred = None
-```
-
-
-```python
-# This test confirms that you have created an array-like object named y_pred
-
-assert type(np.asarray(y_pred)) == np.ndarray
-```
-
-### 4.4) Create a numeric variable `wine_dt_acc` containing the accuracy score for your predictions. 
-
-Hint: You can use the `sklearn.metrics` module.
-
-
-```python
-# CodeGrade step4.4
-# Replace None with appropriate code
-
-wine_dt_acc = None
-```
-
-
-```python
-# This test confirms that you have created a numeric variable named wine_dt_acc
-
-assert isinstance(wine_dt_acc, Number)
-```
-
-### 4.5) Short Answer: Based on the accuracy score, does the model seem to be performing well or to have substantial performance issues? Explain your answer.
-
-
-```python
-# Your answer here
-
-
-```
-
-
-```python
-
-```
